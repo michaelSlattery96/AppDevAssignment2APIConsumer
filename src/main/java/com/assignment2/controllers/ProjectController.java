@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -17,8 +19,10 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RestTemplate;
 
+import com.assignment2.domain.Member;
 import com.assignment2.domain.Project;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,5 +62,39 @@ public class ProjectController {
 		model.addAttribute("projects", projects);
 		
 		return "projects";
+	}
+	
+	@GetMapping("/chooseuser")
+	public String chooseUser(Model model) {
+		
+		model.addAttribute("member", new Member());
+		
+		return "chooseuser";
+	}
+	
+	@GetMapping("showuserprojects")
+	public String showUserProjects(@Valid Member member, Model model) {
+		
+		try {
+			
+			RestTemplate restTemplate = new RestTemplate();
+			String URL = "http://localhost:8080/api/userProjects/"+member.getMemberId();
+			String username = "michael.slattery1@mycit.ie";
+			String password = "Password";
+			
+			ResponseEntity<List<Project>> responseEntity = restTemplate
+					.exchange(URL, HttpMethod.GET,
+							new HttpEntity<Project>(createHeaders(username, password)),
+							new ParameterizedTypeReference<List<Project>>(){});
+			
+			List<Project> userprojects = responseEntity.getBody();
+			
+			model.addAttribute("userprojects", userprojects);
+			
+			return "userprojects";
+		} catch (Exception Ex) {
+			
+			return "notfound";
+		}
 	}
 }
